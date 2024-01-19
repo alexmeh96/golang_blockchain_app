@@ -6,6 +6,7 @@ import (
 )
 
 type LocalTransport struct {
+	Addr1     NetAddr
 	addr      NetAddr
 	consumeCh chan RPC
 	lock      sync.RWMutex
