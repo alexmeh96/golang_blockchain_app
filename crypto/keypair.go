@@ -1,10 +1,13 @@
 package crypto
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/gob"
+	"fmt"
 	"golang_blockchain_app/types"
 	"math/big"
 )
@@ -43,11 +46,60 @@ type PublicKey struct {
 	Key *ecdsa.PublicKey
 }
 
-func (k PublicKey) ToSlice() []byte {
+func (k *PublicKey) GobEncode() ([]byte, error) {
+	var buffer bytes.Buffer
+	encoder := gob.NewEncoder(&buffer)
+
+	if err := encoder.Encode(k.Key.X); err != nil {
+		return nil, err
+	}
+	if err := encoder.Encode(k.Key.Y); err != nil {
+		return nil, err
+	}
+	if err := encoder.Encode(k.Key.Curve.Params().Name); err != nil {
+		return nil, err
+	}
+
+	return buffer.Bytes(), nil
+}
+
+func (k *PublicKey) GobDecode(data []byte) error {
+	// Decode the necessary fields of *ecdsa.PublicKey
+	buffer := bytes.NewBuffer(data)
+	decoder := gob.NewDecoder(buffer)
+
+	var x, y big.Int
+	var curveName string
+
+	if err := decoder.Decode(&x); err != nil {
+		return err
+	}
+	if err := decoder.Decode(&y); err != nil {
+		return err
+	}
+	if err := decoder.Decode(&curveName); err != nil {
+		return err
+	}
+
+	curve := elliptic.P256()
+	if curveName != curve.Params().Name {
+		return fmt.Errorf("invalid curve name: %s", curveName)
+	}
+
+	k.Key = &ecdsa.PublicKey{
+		X:     &x,
+		Y:     &y,
+		Curve: curve,
+	}
+
+	return nil
+}
+
+func (k *PublicKey) ToSlice() []byte {
 	return elliptic.MarshalCompressed(k.Key, k.Key.X, k.Key.Y)
 }
 
-func (k PublicKey) Address() types.Address {
+func (k *PublicKey) Address() types.Address {
 	h := sha256.Sum256(k.ToSlice())
 
 	return types.AddressFromBytes(h[len(h)-20:])
