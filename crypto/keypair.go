@@ -46,6 +46,8 @@ type PublicKey struct {
 	Key *ecdsa.PublicKey
 }
 
+// GobEncode implementation of the GomEncoder interface,
+// for correct encoding of the Key *ecdsa.PublicKey field
 func (k *PublicKey) GobEncode() ([]byte, error) {
 	var buffer bytes.Buffer
 	encoder := gob.NewEncoder(&buffer)
@@ -63,6 +65,8 @@ func (k *PublicKey) GobEncode() ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
+// GobDecode implementation of the GobDecoder interface,
+// for correct encoding of the Key *ecdsa.PublicKey field
 func (k *PublicKey) GobDecode(data []byte) error {
 	// Decode the necessary fields of *ecdsa.PublicKey
 	buffer := bytes.NewBuffer(data)
