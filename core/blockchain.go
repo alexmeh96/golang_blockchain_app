@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"sync"
 )
 
@@ -61,10 +62,10 @@ func (bc *Blockchain) addBlockWithoutValidation(b *Block) error {
 	bc.headers = append(bc.headers, b.Header)
 	bc.lock.Unlock()
 
-	//logrus.WithFields(logrus.Fields{
-	//	"height": b.Height,
-	//	"hash":   b.Hash(BlockHasher{}),
-	//}).Infof("adding new block")
+	logrus.WithFields(logrus.Fields{
+		"height": b.Height,
+		"hash":   b.Hash(BlockHasher{}),
+	}).Infof("adding new block")
 
 	return bc.store.Put(b)
 }
