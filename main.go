@@ -6,6 +6,7 @@ import (
 	"golang_blockchain_app/core"
 	"golang_blockchain_app/crypto"
 	"golang_blockchain_app/network"
+	"log"
 	"math/rand"
 	"strconv"
 	"time"
@@ -35,7 +36,10 @@ func main() {
 		Transports: []network.Transport{trLocal},
 	}
 
-	s := network.NewServer(opts)
+	s, err := network.NewServer(opts)
+	if err != nil {
+		log.Fatal(err)
+	}
 	s.Start()
 }
 
