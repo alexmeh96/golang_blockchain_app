@@ -8,8 +8,6 @@ import (
 	"golang_blockchain_app/crypto"
 	"golang_blockchain_app/network"
 	"log"
-	"math/rand"
-	"strconv"
 	"time"
 )
 
@@ -76,7 +74,7 @@ func makeServer(id string, tr network.Transport, pk *crypto.PrivateKey) *network
 
 func sendTransaction(tr network.Transport, to network.NetAddr) error {
 	privateKey := crypto.GeneratePrivateKey()
-	data := []byte(strconv.FormatInt(int64(rand.Intn(1000)), 10))
+	data := []byte{0x02, 0x0a, 0x02, 0x0a, 0x0b}
 	tx := core.NewTransaction(data)
 	tx.Sign(privateKey)
 	buf := &bytes.Buffer{}
