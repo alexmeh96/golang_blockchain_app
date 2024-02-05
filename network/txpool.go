@@ -6,11 +6,11 @@ import (
 	"sort"
 )
 
-type TxMapSorted struct {
+type TxMapSorter struct {
 	transactions []*core.Transaction
 }
 
-func NewTxMapSorter(txMap map[types.Hash]*core.Transaction) *TxMapSorted {
+func NewTxMapSorter(txMap map[types.Hash]*core.Transaction) *TxMapSorter {
 	txx := make([]*core.Transaction, len(txMap))
 
 	i := 0
@@ -19,22 +19,22 @@ func NewTxMapSorter(txMap map[types.Hash]*core.Transaction) *TxMapSorted {
 		i++
 	}
 
-	s := &TxMapSorted{txx}
+	s := &TxMapSorter{txx}
 
 	sort.Sort(s)
 
 	return s
 }
 
-func (s *TxMapSorted) Len() int {
+func (s *TxMapSorter) Len() int {
 	return len(s.transactions)
 }
 
-func (s *TxMapSorted) Swap(i, j int) {
+func (s *TxMapSorter) Swap(i, j int) {
 	s.transactions[i], s.transactions[j] = s.transactions[j], s.transactions[i]
 }
 
-func (s *TxMapSorted) Less(i, j int) bool {
+func (s *TxMapSorter) Less(i, j int) bool {
 	return s.transactions[i].FirstSeen() < s.transactions[j].FirstSeen()
 }
 

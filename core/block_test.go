@@ -1,6 +1,7 @@
 package core
 
 import (
+	"bytes"
 	"github.com/stretchr/testify/assert"
 	"golang_blockchain_app/crypto"
 	"golang_blockchain_app/types"
@@ -29,6 +30,16 @@ func TestVerifyBlock(t *testing.T) {
 
 	b.Height = 100
 	assert.NotNil(t, b.Verify())
+}
+
+func TestDecodeEncodeBlock(t *testing.T) {
+	b := randomBlock(t, 1, types.Hash{})
+	buf := &bytes.Buffer{}
+	assert.Nil(t, b.Encode(NewGobBlockEncoder(buf)))
+
+	bDecode := new(Block)
+	assert.Nil(t, bDecode.Decode(NewGobBlockDecoder(buf)))
+	assert.Equal(t, b, bDecode)
 }
 
 func randomBlock(t *testing.T, height uint32, prevBlockHash types.Hash) *Block {
