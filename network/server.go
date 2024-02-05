@@ -24,7 +24,7 @@ type ServerOpts struct {
 
 type Server struct {
 	ServerOpts
-	memPool     *TxPool
+	mempool     *TxPool
 	chain       *core.Blockchain
 	isValidator bool
 	rpcCh       chan RPC
@@ -52,7 +52,7 @@ func NewServer(opts ServerOpts) (*Server, error) {
 	s := &Server{
 		ServerOpts:  opts,
 		chain:       chain,
-		memPool:     NewTxPool(),
+		mempool:     NewTxPool(1000),
 		isValidator: opts.PrivateKey != nil,
 		rpcCh:       make(chan RPC),
 		quitCh:      make(chan struct{}, 1),
@@ -139,7 +139,7 @@ func (s *Server) processBlock(b *core.Block) error {
 func (s *Server) processTransaction(tx *core.Transaction) error {
 	hash := tx.Hash(core.TxHasher{})
 
-	if s.memPool.Has(hash) {
+	if s.mempool.Contains(hash) {
 		return nil
 	}
 
@@ -147,13 +147,13 @@ func (s *Server) processTransaction(tx *core.Transaction) error {
 		return err
 	}
 
-	tx.SetFirstSeen(time.Now().UnixNano())
-
-	s.Logger.Log("msg", "adding new tx to mempool", "hash", hash, "mempool_length", s.memPool.Len())
+	s.Logger.Log("msg", "adding new tx to mempool", "hash", hash, "mempoolPending", s.mempool.PendingCount())
 
 	go s.broadcastTx(tx)
 
-	return s.memPool.Add(tx)
+	s.mempool.Add(tx)
+
+	return nil
 }
 
 func (s *Server) broadcastBlock(b *core.Block) error {
@@ -194,11 +194,11 @@ func (s *Server) createNewBlock() error {
 		return err
 	}
 
-	// For now we are going to use all transactions that are in the mempool
+	// For now we are going to use all transactions that are in the pending pool
 	//todo: Later on when we know the internal structure of our transaction
 	// we will implement some kind of complexity function to determine how
 	// many transactions can be included in a block
-	txx := s.memPool.Transactions()
+	txx := s.mempool.Pending()
 
 	block, err := core.NewBlockFromPrevHeader(currentHeader, txx)
 	if err != nil {
@@ -213,7 +213,9 @@ func (s *Server) createNewBlock() error {
 		return err
 	}
 
-	s.memPool.Flush()
+	// TODO: pending pool of tx should only reflect on validator nodes.
+	// Right now "normal nodes" does not have their pending pool cleared.
+	s.mempool.ClearPending()
 
 	go s.broadcastBlock(block)
 
